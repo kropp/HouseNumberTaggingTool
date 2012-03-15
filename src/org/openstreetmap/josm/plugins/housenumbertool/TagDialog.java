@@ -206,13 +206,7 @@ public class TagDialog extends ExtendedDialog {
 
         housnumber = new JTextField();
         housnumber.setPreferredSize(new Dimension(200, 24));
-        int number = 0;
-        try {
-            number = Integer.valueOf(dto.getHousenumber()) + 2;
-        } catch (NumberFormatException e) {
-        }
-        if (number > 0)
-            housnumber.setText(String.valueOf(number));
+        housnumber.setText(dto.getHousenumber());
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
         c.gridy = 6;
