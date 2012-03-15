@@ -19,8 +19,9 @@ public class Dto implements Serializable
    private String postcode;
    private String street;
    private String housenumber;
+    private boolean saveBuilding;
 
-   public String getCountry()
+    public String getCountry()
    {
       return country;
    }
@@ -79,4 +80,12 @@ public class Dto implements Serializable
    {
       this.state = state;
    }
+
+    public boolean isSaveBuilding() {
+        return saveBuilding;
+    }
+
+    public void setSaveBuilding(boolean saveBuilding) {
+        this.saveBuilding = saveBuilding;
+    }
 }

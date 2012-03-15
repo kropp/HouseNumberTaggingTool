@@ -17,7 +17,7 @@ public class LaunchAction extends JosmAction implements SelectionChangedListener
     * 
     */
    private static final long serialVersionUID = -3508864293222033185L;
-   private OsmPrimitive selection = null;
+   private Collection<? extends OsmPrimitive> selection = null;
 
    private String pluginDir;
    
@@ -35,38 +35,20 @@ public class LaunchAction extends JosmAction implements SelectionChangedListener
       
    }
 
-   /**
-    * launch the editor
-    */
-   protected void launchEditor()
+    public void actionPerformed(ActionEvent e)
    {
-      if (!isEnabled())
-      {
-         return;
-      }
-      
-      TagDialog dialog = new TagDialog(pluginDir, selection);
-      dialog.showDialog();
+       if (!isEnabled())
+       {
+          return;
+       }
 
-   }
-
-   public void actionPerformed(ActionEvent e)
-   {
-      launchEditor();
+       TagDialog dialog = new TagDialog(pluginDir, selection);
+       dialog.showDialog();
    }
 
    public void selectionChanged(Collection<? extends OsmPrimitive> newSelection)
    {
-      if ((newSelection != null && newSelection.size() == 1))
-      {
-         setEnabled(true);
-         selection  =  newSelection.iterator().next();
-      }
-      else
-      {
-         setEnabled(false);
-         selection = null;
-      }
-
+       setEnabled(newSelection != null);
+       selection  =  newSelection;
    }
 }

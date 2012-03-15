@@ -1,20 +1,23 @@
 package org.openstreetmap.josm.plugins.housenumbertool;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.util.Collection;
-import java.util.TreeSet;
-
-import javax.swing.*;
-
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletingComboBox;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletionListItem;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletionManager;
+import sun.awt.HorizBagLayout;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Collection;
+import java.util.TreeSet;
+
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 /**
  * @author Oliver Raupach 09.01.2012 <http://www.oliver-raupach.de>
@@ -34,7 +37,7 @@ public class TagDialog extends ExtendedDialog {
     private static final long serialVersionUID = 6414385452106276923L;
 
     private AutoCompletionManager acm;
-    private OsmPrimitive selection;
+    private Collection<? extends OsmPrimitive> selection;
 
     public static final String TEMPLATE_DATA = "/template.data";
 
@@ -45,15 +48,17 @@ public class TagDialog extends ExtendedDialog {
     private AutoCompletingComboBox street;
     private JTextField housnumber;
     private final DtoReaderWriter dtoReaderWriter;
+    private JLabel houseNumberToLabel;
+    private JCheckBox buildingCheckBox;
 
-    public TagDialog(String pluginDir, OsmPrimitive p_selection) {
+    public TagDialog(String pluginDir, Collection<? extends OsmPrimitive> p_selection) {
         super(Main.parent,
                 tr("House Number Editor"),
                 new String[]{tr("OK"), tr("Cancel")},
                 true
         );
         dtoReaderWriter = new DtoReaderWriter(pluginDir);
-        this.selection = p_selection;
+        selection = p_selection;
 
         JPanel editPanel = createContentPane();
 
@@ -76,24 +81,28 @@ public class TagDialog extends ExtendedDialog {
     }
 
     private JPanel createContentPane() {
-        acm = selection.getDataSet().getAutoCompletionManager();
+        OsmPrimitive first = selection.iterator().next();
+        acm = first.getDataSet().getAutoCompletionManager();
 
-        Dto dto = dtoReaderWriter.loadDto(selection);
+        Dto dto = dtoReaderWriter.loadDto(first);
 
         JPanel editPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
-        JLabel buildingLabel = new JLabel(TAG_BUILDING);
+        buildingCheckBox = new JCheckBox(TAG_BUILDING);
+        buildingCheckBox.setFocusable(false);
+        buildingCheckBox.setSelected(dto.isSaveBuilding());
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 0;
         c.gridy = 0;
         c.weightx = 0;
-        editPanel.add(buildingLabel, c);
+        editPanel.add(buildingCheckBox, c);
 
-        JTextField building = new JTextField();
+        AutoCompletingComboBox building = new AutoCompletingComboBox();
+        building.setPossibleACItems(acm.getValues(TAG_BUILDING));
         building.setPreferredSize(new Dimension(200, 24));
-        building.setText("yes");
-        building.setEditable(false);
+        building.setEditable(true);
+        building.setSelectedItem(first.get(TAG_BUILDING));
         c.gridx = 1;
         c.gridy = 0;
         c.weightx = 1;
@@ -197,7 +206,8 @@ public class TagDialog extends ExtendedDialog {
         editPanel.add(street, c);
 
         // housenumber
-        JLabel houseNumberLabel = new JLabel(TAG_ADDR_HOUSENUMBER);
+        String label = selection.size() > 1 ? tr("{0} from", TAG_ADDR_HOUSENUMBER) : TAG_ADDR_HOUSENUMBER;
+        JLabel houseNumberLabel = new JLabel(label);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 0;
         c.gridy = 6;
@@ -207,18 +217,54 @@ public class TagDialog extends ExtendedDialog {
         housnumber = new JTextField();
         housnumber.setPreferredSize(new Dimension(200, 24));
         housnumber.setText(dto.getHousenumber());
+        housnumber.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                updateTo();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                updateTo();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                updateTo();
+            }
+
+            private void updateTo() {
+                houseNumberToLabel.setText(getHouseNumberToText(housnumber.getText()));
+            }
+        });
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
         c.gridy = 6;
         c.weightx = 1;
-        editPanel.add(housnumber, c);
+
+        if (selection.size() > 1) {
+            JPanel panel = new JPanel();
+            housnumber.setPreferredSize(new Dimension(100, 24));
+            panel.add(housnumber);
+            houseNumberToLabel = new JLabel(getHouseNumberToText(dto.getHousenumber()));
+            houseNumberToLabel.setPreferredSize(new Dimension(100, 24));
+            panel.add(houseNumberToLabel);
+            editPanel.add(panel, c);
+        } else {
+            editPanel.add(housnumber, c);
+        }
         return editPanel;
+    }
+
+    private String getHouseNumberToText(String housenumber) {
+        return tr(" to {0}", incrementHouseNumber(housenumber, selection.size() - 1));
     }
 
     @Override
     protected void buttonAction(int buttonIndex, ActionEvent evt) {
         if (buttonIndex == 0) {
             Dto dto = new Dto();
+            dto.setSaveBuilding(buildingCheckBox.isSelected());
             dto.setCity(getAutoCompletingComboBoxValue(city));
             dto.setCountry(getAutoCompletingComboBoxValue(country));
             dto.setHousenumber(housnumber.getText());
@@ -226,10 +272,38 @@ public class TagDialog extends ExtendedDialog {
             dto.setStreet(getAutoCompletingComboBoxValue(street));
             dto.setState(getAutoCompletingComboBoxValue(state));
 
-            OsmPrimitiveUpdater.updateJOSMSelection(selection, dto);
+            for (OsmPrimitive primitive : selection) {
+                OsmPrimitiveUpdater.updateJOSMSelection(primitive, dto);
+                dto.setHousenumber(incrementHouseNumber(dto.getHousenumber(), 1));
+            }
             dtoReaderWriter.saveDto(dto);
         }
         setVisible(false);
+    }
+
+    private String incrementHouseNumber(String housenumber, int by) {
+        if (housenumber.isEmpty())
+            return housenumber;
+
+        int houseNumberTo = 0;
+        try {
+            houseNumberTo = Integer.valueOf(housenumber);
+        } catch (NumberFormatException e) {
+            char c = housenumber.charAt(housenumber.length() - 1);
+            if (Character.isLetter(c)) {
+                try {
+                    houseNumberTo = Integer.valueOf(housenumber.substring(0, housenumber.length() - 1));
+                    c += by;
+                    return String.valueOf(houseNumberTo) + c;
+                } catch (NumberFormatException e1)
+                {
+                    // nothing to do with this
+                }
+            }
+            return housenumber;
+        }
+        houseNumberTo += by*2;
+        return String.valueOf(houseNumberTo);
     }
 
     private String getAutoCompletingComboBoxValue(AutoCompletingComboBox box) {
