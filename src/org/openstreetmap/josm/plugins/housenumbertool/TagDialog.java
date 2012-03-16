@@ -6,14 +6,12 @@ import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletingComboBox;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletionListItem;
 import org.openstreetmap.josm.gui.tagging.ac.AutoCompletionManager;
-import sun.awt.HorizBagLayout;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -234,7 +232,8 @@ public class TagDialog extends ExtendedDialog {
             }
 
             private void updateTo() {
-                houseNumberToLabel.setText(getHouseNumberToText(housnumber.getText()));
+                if (houseNumberToLabel != null)
+                    houseNumberToLabel.setText(getHouseNumberToText(housnumber.getText()));
             }
         });
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -295,14 +294,13 @@ public class TagDialog extends ExtendedDialog {
                     houseNumberTo = Integer.valueOf(housenumber.substring(0, housenumber.length() - 1));
                     c += by;
                     return String.valueOf(houseNumberTo) + c;
-                } catch (NumberFormatException e1)
-                {
+                } catch (NumberFormatException e1) {
                     // nothing to do with this
                 }
             }
             return housenumber;
         }
-        houseNumberTo += by*2;
+        houseNumberTo += by * 2;
         return String.valueOf(houseNumberTo);
     }
 
