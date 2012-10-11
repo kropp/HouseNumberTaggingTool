@@ -11,17 +11,18 @@ public class Dto implements Serializable
    /**
     * 
     */
-   private static final long serialVersionUID = -4025800761473341695L;
+   private static final long serialVersionUID = -4025800761473341694L;
 
    private String country;
    private String state;
+   private String suburb;
    private String city;
    private String postcode;
    private String street;
    private String housenumber;
-    private boolean saveBuilding;
+   private boolean saveBuilding;
 
-    public String getCountry()
+   public String getCountry()
    {
       return country;
    }
@@ -80,6 +81,14 @@ public class Dto implements Serializable
    {
       this.state = state;
    }
+
+    public String getSuburb() {
+        return suburb;
+    }
+
+    public void setSuburb(String suburb) {
+        this.suburb = suburb;
+    }
 
     public boolean isSaveBuilding() {
         return saveBuilding;

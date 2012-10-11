@@ -59,6 +59,9 @@ public class DtoReaderWriter {
             String city = selection.get(TagDialog.TAG_ADDR_CITY);
             if (city != null)
                 dto.setCity(city);
+            String suburb = selection.get(TagDialog.TAG_ADDR_SUBURB);
+            if (suburb != null)
+                dto.setSuburb(suburb);
             String country = selection.get(TagDialog.TAG_ADDR_COUNTRY);
             if (country != null)
                 dto.setCountry(country);

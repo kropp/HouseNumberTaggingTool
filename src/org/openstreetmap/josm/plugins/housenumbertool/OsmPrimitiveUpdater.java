@@ -34,6 +34,12 @@ public class OsmPrimitiveUpdater {
             commands.add(command);
         }
 
+        value = selection.get(TagDialog.TAG_ADDR_SUBURB);
+        if (value == null || (value != null && !value.equals(dto.getSuburb()))) {
+            ChangePropertyCommand command = new ChangePropertyCommand(selection, TagDialog.TAG_ADDR_SUBURB, dto.getSuburb());
+            commands.add(command);
+        }
+
         value = selection.get(TagDialog.TAG_ADDR_COUNTRY);
         if (value == null || (value != null && !value.equals(dto.getCountry()))) {
             ChangePropertyCommand command = new ChangePropertyCommand(selection, TagDialog.TAG_ADDR_COUNTRY, dto.getCountry());

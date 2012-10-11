@@ -26,6 +26,7 @@ public class TagDialog extends ExtendedDialog {
     public static final String TAG_ADDR_COUNTRY = "addr:country";
     public static final String TAG_ADDR_STATE = "addr:state";
     public static final String TAG_ADDR_CITY = "addr:city";
+    public static final String TAG_ADDR_SUBURB = "addr:suburb";
     public static final String TAG_ADDR_POSTCODE = "addr:postcode";
     public static final String TAG_ADDR_HOUSENUMBER = "addr:housenumber";
     public static final String TAG_ADDR_STREET = "addr:street";
@@ -42,6 +43,7 @@ public class TagDialog extends ExtendedDialog {
     private AutoCompletingComboBox country;
     private AutoCompletingComboBox state;
     private AutoCompletingComboBox city;
+    private AutoCompletingComboBox suburb;
     private AutoCompletingComboBox postcode;
     private AutoCompletingComboBox street;
     private JTextField housnumber;
@@ -165,11 +167,30 @@ public class TagDialog extends ExtendedDialog {
         c.weightx = 1;
         editPanel.add(city, c);
 
+        // suburb
+        JLabel suburbLabel = new JLabel(TAG_ADDR_SUBURB);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 0;
+        c.gridy = 4;
+        c.weightx = 0;
+        editPanel.add(suburbLabel, c);
+
+        suburb = new AutoCompletingComboBox();
+        suburb.setPossibleACItems(acm.getValues(TAG_ADDR_SUBURB));
+        suburb.setPreferredSize(new Dimension(200, 24));
+        suburb.setEditable(true);
+        suburb.setSelectedItem(dto.getSuburb());
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 1;
+        c.gridy = 4;
+        c.weightx = 1;
+        editPanel.add(suburb, c);
+
         // postcode
         JLabel zipEnabled = new JLabel(TAG_ADDR_POSTCODE);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 0;
-        c.gridy = 4;
+        c.gridy = 5;
         c.weightx = 0;
         editPanel.add(zipEnabled, c);
 
@@ -180,7 +201,7 @@ public class TagDialog extends ExtendedDialog {
         postcode.setSelectedItem(dto.getPostcode());
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
-        c.gridy = 4;
+        c.gridy = 5;
         c.weightx = 1;
         editPanel.add(postcode, c);
 
@@ -188,7 +209,7 @@ public class TagDialog extends ExtendedDialog {
         JLabel streetLabel = new JLabel(TAG_ADDR_STREET);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 0;
-        c.gridy = 5;
+        c.gridy = 6;
         c.weightx = 0;
         editPanel.add(streetLabel, c);
 
@@ -199,7 +220,7 @@ public class TagDialog extends ExtendedDialog {
         street.setSelectedItem(dto.getStreet());
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
-        c.gridy = 5;
+        c.gridy = 6;
         c.weightx = 1;
         editPanel.add(street, c);
 
@@ -208,7 +229,7 @@ public class TagDialog extends ExtendedDialog {
         JLabel houseNumberLabel = new JLabel(label);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 0;
-        c.gridy = 6;
+        c.gridy = 7;
         c.weightx = 0;
         editPanel.add(houseNumberLabel, c);
 
@@ -238,7 +259,7 @@ public class TagDialog extends ExtendedDialog {
         });
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
-        c.gridy = 6;
+        c.gridy = 7;
         c.weightx = 1;
 
         if (selection.size() > 1) {
@@ -265,16 +286,23 @@ public class TagDialog extends ExtendedDialog {
             Dto dto = new Dto();
             dto.setSaveBuilding(buildingCheckBox.isSelected());
             dto.setCity(getAutoCompletingComboBoxValue(city));
+            dto.setSuburb(getAutoCompletingComboBoxValue(suburb));
             dto.setCountry(getAutoCompletingComboBoxValue(country));
             dto.setHousenumber(housnumber.getText());
             dto.setPostcode(getAutoCompletingComboBoxValue(postcode));
             dto.setStreet(getAutoCompletingComboBoxValue(street));
             dto.setState(getAutoCompletingComboBoxValue(state));
 
+            boolean first = true;
             for (OsmPrimitive primitive : selection) {
+                if (first)
+                    first = false;
+                else
+                    dto.setHousenumber(incrementHouseNumber(dto.getHousenumber(), 1));
+
                 OsmPrimitiveUpdater.updateJOSMSelection(primitive, dto);
-                dto.setHousenumber(incrementHouseNumber(dto.getHousenumber(), 1));
             }
+
             dtoReaderWriter.saveDto(dto);
         }
         setVisible(false);
