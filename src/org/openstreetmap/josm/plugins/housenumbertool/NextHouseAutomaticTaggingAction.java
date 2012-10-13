@@ -20,7 +20,7 @@ public class NextHouseAutomaticTaggingAction extends JosmAction implements Selec
 
     public NextHouseAutomaticTaggingAction(String pluginDir) {
         super("HouseNumberAutomaticTagging",
-                "home-icon32",
+                "home-icon-auto32",
                 "Tags next house on the same street automatic",
                 Shortcut.registerShortcut("edit:housenumberautomatictagging", "HouseNumberAutomaticTagging", KeyEvent.VK_K, Shortcut.DIRECT),
                 true);
